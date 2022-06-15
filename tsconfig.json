@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "outDir": "./lib",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "declaration": true,
+    "strict": true,
+    "incremental": true
+  },
+  "include": ["src", "src/ava"],
+  "exclude": ["**/node_modules", "**/.*/"]
+}
