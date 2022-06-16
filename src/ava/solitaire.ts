@@ -20,6 +20,14 @@ test('user_drop', t => {
 
   t.is(solitaire.pov.fen, '0:1c/1:3c2hTc/2:6c/3:/4:/5:8h/6:2d ///')
 
+
+  solitaire = Solitaire.make(_deck.slice(0))
+  solitaire.pov.apply_drop('p-4@4@h-0')
+  solitaire.pov.apply_drop('p-4@3@h-0')
+  solitaire.pov.apply_drop('h-0@2@h-0')
+
+
+
 })
 
 test('fen', t => {
