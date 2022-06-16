@@ -1,9 +1,35 @@
-import { Pile, card_color } from './types'
+import { Card, Pile, card_color } from './types'
 import { solitaire_fen, fen_solitaire } from './format/fen'
 
 export type DropRule = string
 
-export class Solitaire {
+export interface DropRuleHooks {
+  cut_o_pile: (o_stack_i: number, o_i: number) => Pile,
+  drop_o_pile: (stack: Pile, drop_stack_i: number) => void,
+  drop_o_hole: (stack: Pile, drop_stack_i: number) => void
+}
+
+export function call_drop_rule_hooks(hooks: DropRuleHooks) {
+  return (rule: DropRule) => {
+    let [_o_name, _o_i, _drop_name] = rule.split('@')
+    let [_, _o_stack_i] = _o_name.split('-')
+    let [_drop_stack_type, _drop_stack_i] = _drop_name.split('-')
+
+    let o_i = parseInt(_o_i),
+      drop_stack_i = parseInt(_drop_stack_i),
+      o_stack_i = parseInt(_o_stack_i)
+
+    let stack = hooks.cut_o_pile(o_stack_i, o_i)
+
+    if (_drop_stack_type[0] === 'p') {
+      hooks.drop_o_pile(stack, drop_stack_i)
+    } else if (_drop_stack_type[0] === 'h') {
+      hooks.drop_o_hole(stack, drop_stack_i)
+    }
+  }
+}
+
+export class Solitaire implements DropRuleHooks {
 
 
   static make = (_deck: Pile) => {
@@ -22,38 +48,39 @@ export class Solitaire {
     return SolitairePov.from_solitaire(this)
   }
 
+  cut_o_pile(o_stack_i: number, o_i: number) {
+    let [o_backs, o_pile] = this.piles[o_stack_i]
+    let o_f = o_i - o_backs.length
 
-  user_apply_drop(rule: DropRule) {
-    let [_o_name, _o_i, _drop_name] = rule.split('@')
-    let [_, _o_stack_i] = _o_name.split('-')
-    let [__, _drop_stack_i] = _drop_name.split('-')
-
-    let o_i = parseInt(_o_i),
-      drop_stack_i = parseInt(_drop_stack_i),
-      o_stack_i = parseInt(_o_stack_i)
-    
-    let [o_backs, _o_pile] = this.piles[o_stack_i]
-    let _drop_pile = this.piles[drop_stack_i][1]
-
-    drop_pile(_o_pile, o_i - o_backs.length, _drop_pile)
-
-
-    if (_o_pile.length === 0 && o_backs.length > 0) {
+    let res = o_pile.splice(o_f)
+    if (o_pile.length === 0 && o_backs.length > 0) {
       let reveal_card = o_backs.pop()!
-      _o_pile.push(reveal_card)
+      o_pile.push(reveal_card)
     }
 
-
+    return res
   }
 
+  drop_o_pile(cards: Pile, drop_stack_i: number) {
+    let drop_pile = this.piles[drop_stack_i][1]
+    drop_pile.push(...cards)
+  }
+
+  drop_o_hole(cards: Pile, drop_stack_i: number) {
+    let drop_hole = this.holes[drop_stack_i]
+    drop_hole.push(...cards)
+  }
+
+  apply_drop: (rule: DropRule) => void
 
   constructor(readonly piles: Array<[Pile, Pile]>,
               readonly holes: Array<Pile>) {
+                this.apply_drop = call_drop_rule_hooks(this)
               }
 }
 
 
-export class SolitairePov {
+export class SolitairePov implements DropRuleHooks {
 
   static from_fen = (fen: string) => {
     return fen_solitaire(fen)
@@ -71,10 +98,16 @@ export class SolitairePov {
   }
 
   get stacks() {
-    return this.piles.map((_, i) => {
+    let piles = this.piles.map((_, i) => {
       let cards = [...Array(_[0]).keys()].map(_ => 'zz').join('') + _[1].join('')
       return [`p-${i}`, cards].join('@')
     })
+
+    let holes = this.holes.map((_, i) => {
+      let cards = _.join('')
+      return [`h-${i}`, cards].join('@')
+    })
+    return [...piles, ...holes]
   }
 
   get drags() {
@@ -90,10 +123,10 @@ export class SolitairePov {
 
 
   get drops() {
-    return this.piles.flatMap((o_stack, o_stack_i) => {
+    let piles = this.piles.flatMap((o_stack, o_stack_i) => {
       let [back, fronts] = o_stack
 
-      return fronts.flatMap((_, f_i) => {
+      let _piles = fronts.flatMap((_, f_i) => {
         let o_i = back + f_i
         return this.piles
         .map((drop_stack, drop_stack_i) => {
@@ -102,7 +135,22 @@ export class SolitairePov {
           }
         }).filter(Boolean)
       })
+
+      let _holes = this.holes.map((_, drop_stack_i) => {
+        let front = fronts.slice(-1)[0]
+        let o_i = back + fronts.length - 1
+
+        if (front && can_drop_pile_hole(_, front)) {
+          return [`p-${o_stack_i}`, o_i, `h-${drop_stack_i}`].join('@')
+        }
+      }).filter(Boolean)
+
+      return [..._piles, ..._holes]
     })
+
+    return [
+      ...piles
+    ]
   }
 
 
@@ -116,24 +164,38 @@ export class SolitairePov {
     }).filter(Boolean)
   }
 
-  user_apply_drop(rule: DropRule) {
-    let [_o_name, _o_i, _drop_name] = rule.split('@')
-    let [_, _o_stack_i] = _o_name.split('-')
-    let [__, _drop_stack_i] = _drop_name.split('-')
+  cut_o_pile(o_stack_i: number, o_i: number) {
+    let [o_backs, o_pile] = this.piles[o_stack_i]
+    let o_f = o_i - o_backs
 
-    let o_i = parseInt(_o_i),
-      drop_stack_i = parseInt(_drop_stack_i),
-      o_stack_i = parseInt(_o_stack_i)
-    
-    let [o_back, _o_pile] = this.piles[o_stack_i]
-    let _drop_pile = this.piles[drop_stack_i][1]
+    let res = o_pile.splice(o_f)
 
-    drop_pile(_o_pile, o_i - o_back, _drop_pile)
+    return res
+  }
+
+  drop_o_pile(cards: Pile, drop_stack_i: number) {
+    let drop_pile = this.piles[drop_stack_i][1]
+    drop_pile.push(...cards)
+  }
+
+  drop_o_hole(cards: Pile, drop_stack_i: number) {
+    let drop_hole = this.holes[drop_stack_i]
+    drop_hole.push(...cards)
   }
 
 
-  constructor(readonly piles: Array<[number, Pile]>, readonly holes: Array<Pile>) {}
 
+  apply_drop: (rule: DropRule) => void
+
+  constructor(readonly piles: Array<[number, Pile]>, readonly holes: Array<Pile>) {
+              this.apply_drop = call_drop_rule_hooks(this)
+  }
+
+}
+
+function can_drop_pile_hole(o_hole: Pile, front: Card) {
+
+  return true
 }
 
 
