@@ -43,6 +43,22 @@ export class SolitairePov {
     return solitaire_fen(this)
   }
 
+  get stacks() {
+    return this.piles.map((_, i) => {
+      let cards = [...Array(_[0]).keys()].map(_ => 'zz').join('') + _[1]
+      return [`p-${i}`, cards].join('@')
+    })
+  }
+
+  get drags() {
+    return this.piles.map((_, o_stack_i) => {
+      let back = _[0]
+      let fronts = _[1]
+
+
+      return [`p-${o_stack_i}`, fronts.length].join('@')
+    })
+  }
 
   constructor(readonly piles: Array<[number, Pile]>, readonly holes: Array<Pile>) {}
 
