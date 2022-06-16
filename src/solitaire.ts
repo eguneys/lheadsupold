@@ -22,6 +22,31 @@ export class Solitaire {
     return SolitairePov.from_solitaire(this)
   }
 
+
+  user_apply_drop(rule: DropRule) {
+    let [_o_name, _o_i, _drop_name] = rule.split('@')
+    let [_, _o_stack_i] = _o_name.split('-')
+    let [__, _drop_stack_i] = _drop_name.split('-')
+
+    let o_i = parseInt(_o_i),
+      drop_stack_i = parseInt(_drop_stack_i),
+      o_stack_i = parseInt(_o_stack_i)
+    
+    let [o_backs, _o_pile] = this.piles[o_stack_i]
+    let _drop_pile = this.piles[drop_stack_i][1]
+
+    drop_pile(_o_pile, o_i - o_backs.length, _drop_pile)
+
+
+    if (_o_pile.length === 0 && o_backs.length > 0) {
+      let reveal_card = o_backs.pop()!
+      _o_pile.push(reveal_card)
+    }
+
+
+  }
+
+
   constructor(readonly piles: Array<[Pile, Pile]>,
               readonly holes: Array<Pile>) {
               }
@@ -115,9 +140,13 @@ export class SolitairePov {
 function can_drop_piles(o_stack: [number, Pile], f_i: number, drop_stack: [number, Pile]) {
   let [back, fronts] = o_stack
   let card = fronts[f_i]
-  let drop_on_card = drop_stack[1].slice(-1)[0]
+  let [drop_back, drop_fronts] = drop_stack
+  let drop_on_card = drop_fronts.slice(-1)[0]
 
   if (!drop_on_card) {
+    if (drop_back === 0) {
+      return true
+    }
     return false
   }
 
