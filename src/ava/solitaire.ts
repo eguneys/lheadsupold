@@ -18,7 +18,7 @@ test('user_drop', t => {
   solitaire.pov.user_apply_drop('p-4@4@p-2')
   solitaire.pov.user_apply_drop('p-2@3@p-1')
 
-  t.is(solitaire.pov.fen, '')
+  t.is(solitaire.pov.fen, '0:1c/1:3c2hTc/2:6c/3:/4:/5:8h/6:2d ///')
 
 })
 

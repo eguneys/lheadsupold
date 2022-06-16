@@ -81,6 +81,16 @@ export class SolitairePov {
   }
 
 
+  get reveals() {
+    return this.piles.map((o_stack, o_stack_i) => {
+      let [back, fronts] = o_stack
+
+      if (fronts.length === 0 && back > 0) {
+        return [`p-${o_stack_i}`, back - 1].join('@')
+      }
+    }).filter(Boolean)
+  }
+
   user_apply_drop(rule: DropRule) {
     let [_o_name, _o_i, _drop_name] = rule.split('@')
     let [_, _o_stack_i] = _o_name.split('-')
