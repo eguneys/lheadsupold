@@ -3,9 +3,6 @@ import { solitaire_fen, fen_solitaire } from './format/fen'
 
 export class Solitaire {
 
-  static from_fen = (fen: string) => {
-    return fen_solitaire(fen)
-  }
 
   static make = (_deck: Pile) => {
     let piles = []
@@ -19,14 +16,34 @@ export class Solitaire {
     return new Solitaire(piles, holes)
   }
 
-
-  get fen() {
-    return solitaire_fen(this)
+  get pov() {
+    return SolitairePov.from_solitaire(this)
   }
 
   constructor(readonly piles: Array<[Pile, Pile]>,
               readonly holes: Array<Pile>) {
               }
+}
 
+
+export class SolitairePov {
+
+  static from_fen = (fen: string) => {
+    return fen_solitaire(fen)
+  }
+
+  static from_solitaire = (solitaire: Solitaire) => {
+    let piles = solitaire.piles.map(_ => [_[0].length, _[1]] as [number, Pile])
+    let holes = solitaire.holes
+
+    return new SolitairePov(piles, holes)
+  }
+
+  get fen() {
+    return solitaire_fen(this)
+  }
+
+
+  constructor(readonly piles: Array<[number, Pile]>, readonly holes: Array<Pile>) {}
 
 }

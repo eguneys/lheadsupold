@@ -1,5 +1,5 @@
 import { card_suit, card_rank, is_card, Pile, Card } from '../types'
-import { Solitaire } from '../solitaire'
+import { SolitairePov } from '../solitaire'
 
 export function uci_pile(_: string): Pile {
   let res = []
@@ -12,9 +12,8 @@ export function uci_pile(_: string): Pile {
   return res
 }
 
-export function solitaire_fen(solitaire: Solitaire) {
-  let piles = solitaire.piles.map(_ => 
-                                  _.map(_ => _.join('')).join(':')).join('/')
+export function solitaire_fen(solitaire: SolitairePov) {
+  let piles = solitaire.piles.map(_ => [_[0], _[1].join('')].join(':')).join('/')
 
   let holes = solitaire.holes.map(_ => _.join('')).join('/')
 
@@ -25,8 +24,11 @@ export function solitaire_fen(solitaire: Solitaire) {
 export function fen_solitaire(fen: string) {
   let [_piles, _holes] = fen.split(' ')
 
-  let piles = _piles.split('/').map(_ => _.split(':').map(uci_pile) as [Pile, Pile])
+  let piles = _piles.split('/').map(_ => {
+    let [nb, pile] = _.split(':')
+    return [parseInt(nb), uci_pile(pile)] as [number, Pile]
+  })
   let holes = _holes.split('/').map(uci_pile)
 
-  return new Solitaire(piles, holes)
+  return new SolitairePov(piles, holes)
 }

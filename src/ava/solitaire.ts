@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { Solitaire } from '../solitaire'
+import { Solitaire, SolitairePov } from '../solitaire'
 import { _deck } from '../types'
 
 
@@ -11,9 +11,9 @@ test('index', t => {
   let solitaire = Solitaire.make(deck)
 
 
-  t.is(solitaire.fen, ':1c/2c:3c/4c5c:6c/7c8c9c:Tc/JcQcKc1h:2h/3h4h5h6h7h:8h/9hThJhQhKh1d:2d ///')
+  t.is(solitaire.pov.fen, '0:1c/1:3c/2:6c/3:Tc/4:2h/5:8h/6:2d ///')
 
-  t.is(Solitaire.from_fen(solitaire.fen).fen, solitaire.fen)
+  t.is(SolitairePov.from_fen(solitaire.pov.fen).fen, solitaire.pov.fen)
 
 
 })
