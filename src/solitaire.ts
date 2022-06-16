@@ -1,4 +1,4 @@
-import { Pile } from './types'
+import { Pile, card_color } from './types'
 import { solitaire_fen, fen_solitaire } from './format/fen'
 
 export class Solitaire {
@@ -58,8 +58,35 @@ export class SolitairePov {
 
       return [`p-${o_stack_i}`, fronts.length].join('@')
     })
+
+  }
+
+
+  get drops() {
+    return this.piles.flatMap((o_stack, o_stack_i) => {
+      let [back, fronts] = o_stack
+
+      return fronts.flatMap((_, f_i) => {
+        let o_i = back + f_i
+        return this.piles
+        .map((drop_stack, drop_stack_i) => {
+          if (can_drop_piles(o_stack, f_i, drop_stack)) {
+            return [`p-${o_stack_i}`, o_i, `p-${drop_stack_i}`].join('@')
+          }
+        }).filter(Boolean)
+      })
+    })
   }
 
   constructor(readonly piles: Array<[number, Pile]>, readonly holes: Array<Pile>) {}
 
+}
+
+
+function can_drop_piles(o_stack: [number, Pile], f_i: number, drop_stack: [number, Pile]) {
+  let [back, fronts] = o_stack
+  let card = fronts[f_i]
+  let drop_on_card = drop_stack[1].slice(-1)[0]
+
+  return card_color(card) !== card_color(drop_on_card)
 }

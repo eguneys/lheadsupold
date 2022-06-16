@@ -6,9 +6,11 @@ export type Card = string
 export type Pile = Array<Card>
 
 export function card(suit: Suit, rank: Rank) { return rank + suit }
-export function card_suit(card: Card) { return card[1] }
-export function card_rank(card: Card) { return card[0] }
+export function card_suit(card: Card): Suit { return card[1] as Suit }
+export function card_rank(card: Card): Rank { return card[0] as Rank }
+export function card_color(card: Card) { return colors[card_suit(card)] }
 
+export const colors = { 'c': 'b', 's': 'b', 'h': 'r', 'd': 'r' }
 export const suits: Array<Suit> = ['c','h','d','s'] as Array<Suit>
 export const ranks: Array<Rank> = ['1','2','3','4','5','6','7','8','9','T','J','Q','K'] as Array<Rank>
 
