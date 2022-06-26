@@ -14,21 +14,22 @@ export function uci_pile(_: string): Pile {
 
 export function solitaire_fen(solitaire: SolitairePov) {
   let piles = solitaire.piles.map(_ => [_[0], _[1].join('')].join(':')).join('/')
-
   let holes = solitaire.holes.map(_ => _.join('')).join('/')
+  let waste = solitaire.waste.join('')
 
-  return [piles, holes].join(' ')
+  return [piles, holes, waste].join(' ')
 }
 
 
 export function fen_solitaire(fen: string) {
-  let [_piles, _holes] = fen.split(' ')
+  let [_piles, _holes, _waste] = fen.split(' ')
 
   let piles = _piles.split('/').map(_ => {
     let [nb, pile] = _.split(':')
     return [parseInt(nb), uci_pile(pile)] as [number, Pile]
   })
   let holes = _holes.split('/').map(uci_pile)
+  let waste = uci_pile(_waste)
 
-  return new SolitairePov(piles, holes)
+  return new SolitairePov(piles, holes, waste)
 }

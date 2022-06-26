@@ -50,7 +50,10 @@ export class Solitaire implements DropRuleHooks {
 
     let holes = [[], [], [], []]
 
-    return new Solitaire(piles, holes)
+    let waste: Pile = []
+    let stock: Pile = _deck.slice(0)
+
+    return new Solitaire(piles, holes, waste, stock)
   }
 
   get pov() {
@@ -88,8 +91,15 @@ export class Solitaire implements DropRuleHooks {
 
   apply_drop: (rule: DropRule) => void
 
+  apply_click() {
+    this.stock.unshift(...this.waste.splice(0, this.waste.length))
+    this.waste.push(...this.stock.splice(-3))
+  }
+
   constructor(readonly piles: Array<[Pile, Pile]>,
-              readonly holes: Array<Pile>) {
+              readonly holes: Array<Pile>,
+              readonly waste: Pile,
+              readonly stock: Pile) {
                 this.apply_drop = call_drop_rule_hooks(this)
               }
 }
@@ -104,8 +114,9 @@ export class SolitairePov implements DropRuleHooks {
   static from_solitaire = (solitaire: Solitaire) => {
     let piles = solitaire.piles.map(_ => [_[0].length, _[1]] as [number, Pile])
     let holes = solitaire.holes
+    let waste = solitaire.waste
 
-    return new SolitairePov(piles, holes)
+    return new SolitairePov(piles, holes, waste)
   }
 
   get fen() {
@@ -122,7 +133,11 @@ export class SolitairePov implements DropRuleHooks {
       let cards = _.join('')
       return [`h-${i}`, cards].join('@')
     })
-    return [...piles, ...holes]
+
+
+    let waste = [`w-0`, this.waste.join('')].join('@')
+
+    return [...piles, ...holes, waste]
   }
 
   get drags() {
@@ -221,7 +236,11 @@ export class SolitairePov implements DropRuleHooks {
 
   apply_drop: (rule: DropRule) => void
 
-  constructor(readonly piles: Array<[number, Pile]>, readonly holes: Array<Pile>) {
+  apply_click() {}
+
+  constructor(readonly piles: Array<[number, Pile]>, 
+              readonly holes: Array<Pile>,
+              readonly waste: Pile) {
               this.apply_drop = call_drop_rule_hooks(this)
   }
 
